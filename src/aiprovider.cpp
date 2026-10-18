@@ -1779,6 +1779,36 @@ QString OfflineECUExpertProvider::generateExpertResponse(const QString &query,
         return im;
     }
 
+    // Delphi DCM 7.1AP (Tata 612SK BS6 Phase 2 / Commercial Trucks)
+    if (q.contains("dcm7") || q.contains("612sk") || q.contains("tata") || q.contains("dcm 7.1") || q.contains("dcm7.1ap")) {
+        QString dcm;
+        dcm += "## 🚛 Tata 612SK / BS6 Phase 2 Delphi DCM7.1AP Calibration Engineering\n\n";
+        dcm += "The Tata 612SK Tipper (Tata 4SPCR 3.0L Diesel) utilizes the **Delphi DCM 7.1AP** engine management system. In BS6 Phase 2 / OBD-2 / RDE, it is widely considered challenging by tuners due to multiple integrated safety layers.\n\n";
+        dcm += "### Why Tuners Consider Delphi DCM7.1AP Difficult:\n";
+        dcm += "1. **OBD Flashing Locked (BS6 Phase 2 Security Gateway)**:\n";
+        dcm += "   - Diagnostic OBD-II port writing is blocked by security gateway architecture. Flashing MUST be performed on the Bench (via Bench pinout harness) using modern tools (KT200 / Foxflash / PCMFlash / Flex).\n";
+        dcm += "2. **Complex Real-time Inducement Architecture (AdBlue / SCR)**:\n";
+        dcm += "   - Simply clearing DTC fault codes (e.g. `P20EE`, `P204F`) does NOT stop the internal inducement timer.\n";
+        dcm += "   - The DCM7.1AP firmware runs a multi-stage countdown: Stage 1 (Warning), Stage 2 (25% Torque Derate), Stage 3 (Speed locked to 20 km/h or No-Restart lock).\n";
+        dcm += "   - Proper AdBlue/SCR off requires zeroing the **SCR Master Switch**, suppressing the **NOx feedback loop**, and neutralizing the **Inducement Derate Limiters**.\n";
+        dcm += "3. **Proprietary Delphi Table Descriptors & Checksums**:\n";
+        dcm += "   - Delphi does not use Bosch axis descriptors. RomHEX 14 includes built-in checksum algorithm **devNum 195 (DELPHI DCM7.1A / DCM7.1AP)** for automatic integrity calculation.\n\n";
+        dcm += "### RomHEX 14 Calibration Capabilities for Tata 612SK:\n";
+        dcm += "- **Flash File Editing (4 MB)**: Fully supports opening, viewing in 2D/3D/Hex, and saving DCM7.1AP raw binary files.\n";
+        dcm += "- **Stage 1 Power & Hill Climbing Torque**: Increase the 4SPCR torque ceiling from 390 Nm to 460+ Nm (+18%) and eliminate low-RPM commercial lag.\n";
+        dcm += "- **AdBlue / DPF / SCR Deactivation**: Cleanly removes urea injection countdown without entering the 20 km/h limp lock.\n";
+        dcm += "- **Hardware Disconnect**: Remember to unplug the DCU (Dosing Control Unit) or NOx sensor harness after flashing.";
+
+        if (isMizo) {
+            dcm += "\n\n### 📝 Mizo Tlangkawmna:\n"
+                   "- **Tata 612SK BS6 Phase 2 (Delphi DCM7.1AP) hi kan software hian a khawih thei chiang e!**\n"
+                   "- **A harsa an tih chhan:** OBD-II port atangin a luh theih loh a (Bench mode a ngai), tin AdBlue/SCR a buai laia DTC chauh delete chuan motor kha 20 km/h (Limp mode)-ah a in-lock zui tho thin.\n"
+                   "- Kan software romHEX 14 hian **Delphi DCM7.1AP checksum (devNum 195)** leh binary 4MB a support thlap a; SCR master switch, DPF, leh Torque Limiter (+18%) te chipchiar takin a khawih theih e.\n"
+                   "- Flashing zawhah AdBlue DCU / NOx sensor socket phawi ngei ngei a ngai bawk.\n";
+        }
+        return dcm;
+    }
+
     // Speed Limiter (VMAX)
     if (q.contains("vmax") || q.contains("speed limit") || q.contains("top speed") || q.contains("speed limiter")) {
         QString vm;

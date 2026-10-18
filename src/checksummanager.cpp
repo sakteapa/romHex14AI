@@ -271,6 +271,7 @@ ChecksumDllInfo ChecksumManager::findDllForEcu(const QString& ecuType) const {
             {"SID",   30}, {"MSS",  30},  {"MSV",  30}, {"MSD", 30},
             {"MS41",  35}, {"MS45", 35},  {"BMS",  30},
             {"TC1797",40}, {"TC1793",80}, {"TC179", 70}, {"TC176",70}, {"MPC55",35},
+            {"DCM7.1",120}, {"DCM7", 90}, {"DCM6.2", 70}, {"DCM6", 60}, {"DCM3", 50},
             {nullptr, 0}
         };
         for (int i = 0; kFamilies[i].key; i++) {
