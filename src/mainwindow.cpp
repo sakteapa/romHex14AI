@@ -2867,12 +2867,6 @@ void MainWindow::buildActions()
             QMessageBox::information(this, tr("AI Functions"),
                 tr("AI Functions requires map definitions.\nImport an A2L file first to define ECU maps."));
             return;
-        }
-        if (!ApiClient::instance().isLoggedIn() || !ApiClient::instance().hasModule(QStringLiteral("ai_functions"))) {
-            QMessageBox::information(this, tr("AI Functions"),
-                tr("AI Functions requires a Pro account.\nPurchase from romhex14.com to unlock."));
-            return;
-        }
         auto *dlg = new AIFunctionsDlg(m_projects, proj, this);
         dlg->setAttribute(Qt::WA_DeleteOnClose);
         dlg->show();

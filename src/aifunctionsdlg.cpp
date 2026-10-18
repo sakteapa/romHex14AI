@@ -252,6 +252,12 @@ void AIFunctionsDlg::buildFunctions()
           tr("Disable automatic engine start-stop system"),
           {"SSA*", "STST*", "STARTSTOP*"},
           "zero" },
+
+        { "immo",       QString::fromUtf8("\xF0\x9F\x94\x91"),
+          tr("Immobilizer (IMMO Off)"),
+          tr("Disable immobilizer security authorization flags and DTC error paths"),
+          {"IMMO*", "*IMMO*", "WFS*", "*WFS*", "CWFS*", "CW_WFS*", "DFC*WFS*", "DFC*IMMO*"},
+          "zero" },
     };
 }
 

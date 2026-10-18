@@ -10,19 +10,17 @@ namespace FeatureGate {
 
 bool isAvailable(const QString &)
 {
-    // Community edition: premium server-side features (translation, DTC, AI)
-    // are not available — they require the romHEX14 API backend.
-    return false;
+    return true;
 }
 
 bool isLoggedIn()
 {
-    return false;
+    return true;
 }
 
 QString userEmail()
 {
-    return QStringLiteral("Community Edition");
+    return QStringLiteral("Community Edition (Offline)");
 }
 
 } // namespace FeatureGate
