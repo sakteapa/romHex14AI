@@ -2120,7 +2120,12 @@ void AIAssistant::buildSystemPrompt()
         "7. If the most recent tool result contains an error, address it directly — never restart the conversation.\n"
         "8. Never claim that map data or tools are unavailable unless an attempted tool call returned that error. "
         "Do not invent A2L/XDF data, disassembler cross-references, routines, or datasets: they are not available "
-        "through this assistant. State only what tool results establish and label any general ECU knowledge as general.\n\n"
+        "through this assistant. State only what tool results establish and label any general ECU knowledge as general.\n"
+        "9. MANDATORY DEEP SCAN RULE: Whenever inspecting, analyzing, or diagnosing any ECU file, firmware dump, "
+        "EEPROM, fault codes, or security systems, you MUST ALWAYS perform a full-depth, exhaustive binary Deep Scan. "
+        "Never rely on superficial headers, event-counter shortcuts, or assumptions. Scan every DFC status byte "
+        "(evaluate ISO 14229 flags 0x01, 0x08, 0x20, 0x80), cross-reference Flash OBD clusters, verify dual-block "
+        "transponder key hashes, and check penalty lockout timers.\n\n"
     )
     .arg(projectTitle)
     .arg(romSize)

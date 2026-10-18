@@ -79,6 +79,7 @@ private:
     QString toolSummarizeAllDifferences();                       // natural-language cross-ROM diff summary
     QString toolGetTuningNotes(const QJsonObject &input);        // read logbook entries
     QString toolConfidenceSearch(const QJsonObject &input);      // search_maps with confidence scores
+    QString toolDeepDiagnosticScan(const QJsonObject &input);    // Exhaustive full-depth binary DTC & security audit
 
     // Linked ROM tools
     QString toolListLinkedRoms();

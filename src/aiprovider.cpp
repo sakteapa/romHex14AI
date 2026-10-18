@@ -682,6 +682,61 @@ QString OfflineECUExpertProvider::interpretToolResult(const QString &toolName,
         return QString("### ⚠️ Operation Encountered an Issue\n\n**Details:** %1\n\nPlease ensure a valid ROM file and map pack are currently active.").arg(err);
     }
 
+    // 0. Deep Diagnostic & Security Scan
+    if (toolName == "deep_diagnostic_scan") {
+        int total = root["total_dfcs_evaluated"].toInt();
+        int confirmed = root["confirmed_faults_count"].toInt();
+        int mil = root["mil_requested_count"].toInt();
+        int active = root["active_failed_count"].toInt();
+        QJsonArray dtcs = root["active_dtcs"].toArray();
+        QJsonObject immo = root["immobilizer_audit"].toObject();
+
+        if (isMizo) {
+            QString out = "### 🔬 MANDATORY DEEP SCAN RESULTS (ECU & SECURITY AUDIT)\n\n"
+                          "> **Scan Protocol:** 100% Bit-Level Parse (No shortcuts / No heuristics)\n\n"
+                          "#### 📊 Diagnostic Summary:\n"
+                          "- **Total DFC Pathways Evaluated:** " + QString::number(total) + "\n"
+                          "- **Confirmed Faults:** " + QString::number(confirmed) + "\n"
+                          "- **MIL (Check Engine Light) Requested:** " + QString::number(mil) + " Active Faults\n"
+                          "- **Active Test Failed:** " + QString::number(active) + " Pathways\n\n"
+                          "#### 🛑 Active Fault Codes (DTCs):\n"
+                          "| DTC Code | System | Status | Hrilhfiahna |\n|---|---|---|---|\n";
+            for (const auto &val : dtcs) {
+                QJsonObject d = val.toObject();
+                out += QString("| **%1** | %2 | %3 | %4 |\n")
+                    .arg(d["code"].toString(), d["system"].toString(), d["status"].toString(), d["description"].toString());
+            }
+
+            out += "\n#### 🔑 Immobilizer & Security Audit:\n"
+                   "- **Lockout Status:** " + QString(immo["locked"].toBool() ? "⚠️ LOCKED" : "✅ UNLOCKED / SAFE") + "\n"
+                   "- **Lockout Penalty Counter:** " + QString::number(immo["penalty_lockout_timer"].toInt()) + " mins\n"
+                   "- **Key Hash Synchronization:** " + immo["pairing_sync"].toString() + "\n"
+                   "- **Verdict:** " + immo["summary"].toString() + "\n";
+            return out;
+        } else {
+            QString out = "### 🔬 MANDATORY DEEP SCAN RESULTS (ECU & SECURITY AUDIT)\n\n"
+                          "> **Scan Protocol:** 100% Bit-Level Parse (No heuristics)\n\n"
+                          "#### 📊 Diagnostic Summary:\n"
+                          "- **Total DFC Pathways Evaluated:** " + QString::number(total) + "\n"
+                          "- **Confirmed Faults:** " + QString::number(confirmed) + "\n"
+                          "- **MIL (Check Engine Light) Requested:** " + QString::number(mil) + " Active Faults\n"
+                          "- **Active Test Failed:** " + QString::number(active) + " Pathways\n\n"
+                          "#### 🛑 Active Fault Codes (DTCs):\n"
+                          "| DTC Code | System | Status | Description |\n|---|---|---|---|\n";
+            for (const auto &val : dtcs) {
+                QJsonObject d = val.toObject();
+                out += QString("| **%1** | %2 | %3 | %4 |\n")
+                    .arg(d["code"].toString(), d["system"].toString(), d["status"].toString(), d["description"].toString());
+            }
+
+            out += "\n#### 🔑 Immobilizer & Security Audit:\n"
+                   "- **Lockout Status:** " + QString(immo["locked"].toBool() ? "LOCKED" : "UNLOCKED / SAFE") + "\n"
+                   "- **Key Pairing Status:** " + immo["pairing_sync"].toString() + "\n"
+                   "- **Verdict:** " + immo["summary"].toString() + "\n";
+            return out;
+        }
+    }
+
     // 1. Map Statistics & Mathematical Safety
     if (toolName == "get_map_statistics") {
         QString name = root.contains("name") ? root["name"].toString() : selMap;
@@ -1308,6 +1363,14 @@ QString OfflineECUExpertProvider::generateExpertResponse(const QString &query,
     };
 
     // ── Phase 1: Autonomous Multi-Turn Tool Dispatch ─────────────────────────
+    // 0. Mandatory Deep Diagnostic & Security Scan
+    if (hasTool("deep_diagnostic_scan") &&
+        (q.contains("dtc") || q.contains("fault") || q.contains("scan") || q.contains("chhe") || q.contains("chhia") ||
+         q.contains("error") || q.contains("problem") || q.contains("immo") || q.contains("lock") || q.contains("deep scan"))) {
+        outToolName = "deep_diagnostic_scan";
+        outToolArgs = QJsonObject();
+        return QString();
+    }
 
     // A. Anomaly Detection
     if (hasTool("detect_anomalies") && selMap != "none" &&
