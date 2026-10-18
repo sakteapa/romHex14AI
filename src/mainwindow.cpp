@@ -2838,19 +2838,7 @@ void MainWindow::buildActions()
     connect(m_actDtcManager,     &QAction::triggered, this, [this]() {
         auto *proj = activeProject();
         if (!proj) {
-            QMessageBox::information(this, tr("No project"), tr("Open a project with A2L maps first."));
-            return;
-        }
-        // Check if project has any DFC maps (A2L-driven path)
-        bool hasDfc = false;
-        for (const auto &m : proj->maps) {
-            if (m.name.contains("DFC_CtlMsk")) { hasDfc = true; break; }
-        }
-        if (!hasDfc) {
-            QMessageBox::information(this, tr("No DTCs Found"),
-                tr("No DFC_CtlMsk maps found in this project.\n"
-                   "DTC Manager (A2L) needs DFC definitions from an imported A2L file.\n\n"
-                   "Use “Disable DTC && Features…” for ROM-based (signature-driven) detection."));
+            QMessageBox::information(this, tr("No project"), tr("Open a project or ROM file first."));
             return;
         }
         auto *dlg = new DtcDialog(proj, this);

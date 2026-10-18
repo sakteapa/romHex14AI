@@ -11,10 +11,19 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QPushButton>
+#include <QTabWidget>
 #include <QVector>
 #include "romdata.h"
 
 class Project;
+
+struct LiveFaultRecord {
+    QString code;
+    QString system;
+    QString status;
+    QString description;
+    bool    isMil = false;
+};
 
 struct DtcEntry {
     QString dfcName;         // e.g. "DFC_ACCIBrkErr"
@@ -35,23 +44,45 @@ class DtcDialog : public QDialog {
 public:
     explicit DtcDialog(Project *project, QWidget *parent = nullptr);
 
+private slots:
+    void onClearEepromFaults();
+    void onDisableSelectedDtc();
+    void onDeepScanRefresh();
+
 private:
     void buildUi();
+    QWidget *buildLiveHealthTab();
+    QWidget *buildFlashSwitchesTab();
+
     void loadDtcEntries();
+    void loadLiveFaults();
     void populateTable(const QString &filter = {});
+    void populateLiveTable(const QString &filter = {});
     void toggleSelected();
     void toggleEntry(int row);
     void applyChanges();
     QString rawToPCode(uint16_t raw) const;
 
     Project *m_project = nullptr;
+    QString  m_eepromPath;
+    QByteArray m_eepromData;
+    bool     m_eepromModified = false;
     QVector<DtcEntry> m_entries;
+    QVector<LiveFaultRecord> m_liveFaults;
 
-    QLineEdit    *m_search = nullptr;
-    QTableWidget *m_table  = nullptr;
-    QLabel       *m_stats  = nullptr;
-    QPushButton  *m_btnToggle = nullptr;
-    QPushButton  *m_btnAllOff = nullptr;
+    QTabWidget   *m_tabs       = nullptr;
+    QLineEdit    *m_search     = nullptr;
+    QLineEdit    *m_liveSearch = nullptr;
+    QTableWidget *m_table      = nullptr;
+    QTableWidget *m_liveTable  = nullptr;
+    QLabel       *m_stats      = nullptr;
+    QLabel       *m_immoStatusLbl = nullptr;
+
+    QPushButton  *m_btnToggle  = nullptr;
+    QPushButton  *m_btnAllOff  = nullptr;
     QPushButton  *m_btnRestore = nullptr;
-    QPushButton  *m_btnApply = nullptr;
+    QPushButton  *m_btnApply   = nullptr;
+    QPushButton  *m_btnClearEep = nullptr;
+    QPushButton  *m_btnQuickOff = nullptr;
 };
+

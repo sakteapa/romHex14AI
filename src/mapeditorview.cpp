@@ -18,6 +18,7 @@
 #include "aiprovider.h"
 #include "aiassistant.h"
 #include "logger.h"
+#include <QTimer>
 #include <QSettings>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -948,6 +949,8 @@ MapEditorView::MapEditorView(QWidget *parent)
     m_warningBar->hide();
     root->addWidget(m_warningBar);
 
+    setupSentinelUi(root);
+
     connect(btnFix, &QPushButton::clicked, this, [this]() {
         QDialog dlg(this);
         dlg.setWindowTitle(tr("Set Correct Address — %1").arg(m_map.name));
@@ -1596,6 +1599,7 @@ void MapEditorView::buildTable()
 
     if (m_btn3D->isChecked()) m_map3d->showMap(m_data, m_map);
     updateStatusBar();
+    if (m_sentinelTimer) m_sentinelTimer->start(250);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1680,6 +1684,7 @@ void MapEditorView::commitBatch(const EditBatch &batch)
     } else {
         pushUndo(batch);
     }
+    if (m_sentinelTimer) m_sentinelTimer->start(250);
 }
 
 void MapEditorView::reloadFromProject()
@@ -2620,3 +2625,149 @@ void MapEditorView::updateStatusBar()
             tr("%1 cells selected  ·  Enter or type to set all to the same value  ·  Use Δ bar for +% or add  ·  Ctrl+Z undo").arg(n));
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AI Sentinel / Co-Pilot Linter
+// ═══════════════════════════════════════════════════════════════════════════════
+void MapEditorView::setupSentinelUi(QVBoxLayout *rootLayout)
+{
+    m_sentinelBar = new QFrame(this);
+    m_sentinelBar->setStyleSheet(
+        "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1a1e2e, stop:1 #161b22);"
+        "  border: 1px solid #7c3aed; border-left: 4px solid #a78bfa; border-radius: 4px; padding: 4px 8px; }"
+        "QLabel { color: #e6edf3; font-size: 8.5pt; background: transparent; border: none; }"
+        "QPushButton { background: #238636; color: white; border: 1px solid #2ea043; border-radius: 3px; font-weight: bold; font-size: 8pt; padding: 2px 10px; }"
+        "QPushButton:hover { background: #2ea043; }"
+    );
+    auto *lay = new QHBoxLayout(m_sentinelBar);
+    lay->setContentsMargins(6, 4, 6, 4);
+    lay->setSpacing(8);
+
+    m_sentinelIcon = new QLabel(QString::fromUtf8("\xe2\x9a\xa1 ") + tr("AI Sentinel:"), m_sentinelBar);
+    m_sentinelIcon->setStyleSheet("color: #a78bfa; font-weight: bold; font-size: 9pt;");
+    lay->addWidget(m_sentinelIcon);
+
+    m_sentinelLabel = new QLabel(m_sentinelBar);
+    m_sentinelLabel->setStyleSheet("color: #f0f6fc; font-size: 8.5pt;");
+    lay->addWidget(m_sentinelLabel, 1);
+
+    m_btnSentinelAutoFix = new QPushButton(QString::fromUtf8("\xe2\x9c\xa8 ") + tr("Auto-Smooth Cell"), m_sentinelBar);
+    connect(m_btnSentinelAutoFix, &QPushButton::clicked, this, &MapEditorView::autoFixSentinelIssue);
+    lay->addWidget(m_btnSentinelAutoFix);
+
+    m_btnSentinelDismiss = new QPushButton(tr("Dismiss"), m_sentinelBar);
+    m_btnSentinelDismiss->setStyleSheet("background: transparent; color: #8b949e; border: 1px solid #30363d;");
+    connect(m_btnSentinelDismiss, &QPushButton::clicked, this, [this]{ m_sentinelBar->hide(); });
+    lay->addWidget(m_btnSentinelDismiss);
+
+    m_sentinelBar->hide();
+    rootLayout->insertWidget(3, m_sentinelBar);
+
+    m_sentinelTimer = new QTimer(this);
+    m_sentinelTimer->setSingleShot(true);
+    connect(m_sentinelTimer, &QTimer::timeout, this, &MapEditorView::runSentinelCheck);
+}
+
+void MapEditorView::runSentinelCheck()
+{
+    if (!m_sentinelBar || m_showingOriginal) {
+        if (m_sentinelBar) m_sentinelBar->hide();
+        return;
+    }
+
+    m_sentinelIssues.clear();
+
+    const int cols = qBound(1, m_map.dimensions.x, 256);
+    const int rows = qBound(1, m_map.dimensions.y, 256);
+    if (rows * cols < 4) {
+        m_sentinelBar->hide();
+        return;
+    }
+
+    QString mapName = m_map.name.toLower();
+    QString unit = m_map.scaling.unit.toLower();
+    bool isBoostMap = mapName.contains("boost") || mapName.contains("p_lad") || mapName.contains("ladedruck") || unit.contains("mbar") || unit.contains("hpa");
+    bool isRailMap = mapName.contains("rail") || mapName.contains("p_rail") || mapName.contains("kraftstoff") || unit.contains("bar") || unit.contains("mpa");
+    bool isFuelMap = mapName.contains("torque") || mapName.contains("smoke") || mapName.contains("fuel") || unit.contains("mg/hub") || unit.contains("mg/str");
+
+    // Scan for sensor ceilings and gradient cliffs
+    for (int r = 0; r < rows; ++r) {
+        for (int c = 0; c < cols; ++c) {
+            if (!isVisualCell(r, c)) continue;
+            double val = cellPhys(r, c);
+
+            // Ceiling checks
+            if (isBoostMap && val > 2500.0) {
+                m_sentinelIssues.append({ r, c, val, 2450.0,
+                    tr("⛔ MAP Sensor Ceiling Exceeded: %1 mbar > 2500 mbar hardware limit at Cell (%2,%3)")
+                        .arg(val, 0, 'f', 0).arg(r + 1).arg(c + 1) });
+                break;
+            }
+            if (isRailMap && val > 1645.0) {
+                m_sentinelIssues.append({ r, c, val, 1600.0,
+                    tr("⛔ Rail Pressure Relief Ceiling Exceeded: %1 bar > 1645 bar valve limit at Cell (%2,%3)")
+                        .arg(val, 0, 'f', 0).arg(r + 1).arg(c + 1) });
+                break;
+            }
+            if (isFuelMap && val > 60.0) {
+                m_sentinelIssues.append({ r, c, val, 53.0,
+                    tr("⚠️ Excessive Fuel Injection: %1 mg/hub exceeds safe smoke limit at Cell (%2,%3)")
+                        .arg(val, 0, 'f', 1).arg(r + 1).arg(c + 1) });
+                break;
+            }
+
+            // Gradient cliff check (>35% jump vs orthogonal neighbors)
+            double nSum = 0.0;
+            int nCount = 0;
+            double maxJump = 0.0;
+
+            const int dr[] = {-1, 1, 0, 0};
+            const int dc[] = {0, 0, -1, 1};
+            for (int k = 0; k < 4; ++k) {
+                int nr = r + dr[k];
+                int nc = c + dc[k];
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && isVisualCell(nr, nc)) {
+                    double nv = cellPhys(nr, nc);
+                    nSum += nv;
+                    nCount++;
+                    double step = std::abs(val - nv) / std::max(1.0, std::abs(nv));
+                    if (step > maxJump) maxJump = step;
+                }
+            }
+
+            if (nCount >= 2 && maxJump > 0.35) {
+                double smoothed = nSum / nCount;
+                m_sentinelIssues.append({ r, c, val, smoothed,
+                    tr("⚠️ Gradient Cliff: Cell (%1,%2) jumps +%3% over neighbor (val: %4 \xe2\x86\x92 smoothed: %5)")
+                        .arg(r + 1).arg(c + 1).arg(int(maxJump * 100)).arg(val, 0, 'f', 1).arg(smoothed, 0, 'f', 1) });
+                if (m_sentinelIssues.size() >= 3) break;
+            }
+        }
+        if (!m_sentinelIssues.isEmpty()) break;
+    }
+
+    if (!m_sentinelIssues.isEmpty()) {
+        const auto &issue = m_sentinelIssues.first();
+        m_sentinelLabel->setText(issue.message);
+        m_btnSentinelAutoFix->setText(tr("✨ Auto-Smooth Cell (%1,%2)").arg(issue.row + 1).arg(issue.col + 1));
+        m_sentinelBar->show();
+    } else {
+        m_sentinelBar->hide();
+    }
+}
+
+void MapEditorView::autoFixSentinelIssue()
+{
+    if (m_sentinelIssues.isEmpty()) return;
+    const auto issue = m_sentinelIssues.first();
+    if (issue.row < 0 || issue.col < 0) return;
+
+    EditBatch batch;
+    CellEdit edit = writeCell(issue.row, issue.col, issue.recommendedVal);
+    if (!edit.newBytes.isEmpty()) {
+        batch.append(edit);
+        commitBatch(batch);
+        buildTable();
+    }
+}
+

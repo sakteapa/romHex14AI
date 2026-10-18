@@ -737,10 +737,20 @@ ChecksumResult ChecksumManager::verify(const QByteArray& rom, const ChecksumDllI
         return ChecksumResult::Unsupported;
     }
 #ifdef Q_OS_WIN
-    // Windows: strictly use the battle-tested vendor DLL bridge
+    // Windows: use the vendor DLL bridge if helper & dll are present
     if (isHelperAvailable() && isDllAvailable(dll))
         return bridgeVerify(rom, dll, errorMsg);
-#else
+#endif
+
+    // Native Bosch MED17 / EDC17 TriCore engine
+    if (BoschMED17::canHandle(rom)) {
+        auto st = BoschMED17::verify(rom, errorMsg);
+        if (st == BoschMED17::Status::OK) return ChecksumResult::OK;
+        if (st == BoschMED17::Status::Mismatch) return ChecksumResult::Mismatch;
+        return ChecksumResult::Error;
+    }
+
+#ifndef Q_OS_WIN
     // Linux / macOS: use native cross-platform open-source plugins
     if (m_plugins.isEmpty()) {
         loadPlugins();
@@ -767,10 +777,19 @@ ChecksumResult ChecksumManager::correct(QByteArray& rom, const ChecksumDllInfo& 
         return ChecksumResult::Unsupported;
     }
 #ifdef Q_OS_WIN
-    // Windows: strictly use the battle-tested vendor DLL bridge
+    // Windows: use the vendor DLL bridge if helper & dll are present
     if (isHelperAvailable() && isDllAvailable(dll))
         return bridgeCorrect(rom, dll, errorMsg);
-#else
+#endif
+
+    // Native Bosch MED17 / EDC17 TriCore engine
+    if (BoschMED17::canHandle(rom)) {
+        auto st = BoschMED17::correct(rom, errorMsg);
+        if (st == BoschMED17::Status::OK) return ChecksumResult::OK;
+        return ChecksumResult::Error;
+    }
+
+#ifndef Q_OS_WIN
     // Linux / macOS: use native cross-platform open-source plugins
     if (m_plugins.isEmpty()) {
         loadPlugins();

@@ -210,6 +210,26 @@ private:
     QFrame  *m_warningBar   = nullptr;
     QLabel  *m_warningLabel = nullptr;
 
+    // AI Sentinel / Co-Pilot Linter
+    struct SentinelIssue {
+        int row = -1;
+        int col = -1;
+        double currentVal = 0.0;
+        double recommendedVal = 0.0;
+        QString message;
+    };
+    QFrame      *m_sentinelBar        = nullptr;
+    QLabel      *m_sentinelIcon       = nullptr;
+    QLabel      *m_sentinelLabel      = nullptr;
+    QPushButton *m_btnSentinelAutoFix = nullptr;
+    QPushButton *m_btnSentinelDismiss = nullptr;
+    class QTimer *m_sentinelTimer     = nullptr;
+    QVector<SentinelIssue> m_sentinelIssues;
+
+    void setupSentinelUi(class QVBoxLayout *rootLayout);
+    void runSentinelCheck();
+    void autoFixSentinelIssue();
+
     // Main area
     QStackedWidget *m_stack  = nullptr;
     QTableWidget   *m_table  = nullptr;
@@ -219,3 +239,4 @@ private:
     // Inline editor (child of table viewport)
     QLineEdit *m_inlineEdit = nullptr;
 };
+
