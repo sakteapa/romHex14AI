@@ -184,5 +184,22 @@ private:
     QString generateExpertResponse(const QString &query, const QString &systemPrompt,
                                    const QVector<AIToolDef> &tools,
                                    QString &outToolName, QJsonObject &outToolArgs);
+    QString interpretToolResult(const QString &toolName, const QString &resultJson,
+                                const QString &userQuery, const QString &systemPrompt);
+    QString evaluateMapSafety(const QJsonObject &stats, const QString &mapName, bool isMizo);
+    QString interpretModifiedMaps(const QJsonObject &root, bool isMizo);
+    QString interpretAnomalies(const QJsonObject &root, const QString &mapName, bool isMizo);
+    QString interpretProjectInfo(const QJsonObject &root, bool isMizo);
+    QString interpretScaleMap(const QJsonObject &root, bool isMizo);
+    QString interpretSmoothMap(const QJsonObject &root, bool isMizo);
+    QString interpretZeroMap(const QJsonObject &root, bool isMizo);
+    QString interpretRestoreMap(const QJsonObject &root, bool isMizo);
+    QString interpretCompareMap(const QJsonObject &root, bool isMizo);
+    QString interpretMapPurpose(const QJsonObject &root, bool isMizo);
+    QString interpretMapShape(const QJsonObject &root, bool isMizo);
+    QString interpretRelatedMaps(const QJsonObject &root, bool isMizo);
+    QString interpretUndo(const QJsonObject &root, bool isMizo);
+    QString interpretListMaps(const QJsonObject &root, bool isMizo);
 };
+
 
