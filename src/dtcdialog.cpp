@@ -94,7 +94,7 @@ QWidget *DtcDialog::buildLiveHealthTab()
     cardLay->setContentsMargins(8, 8, 8, 8);
 
     QString vVin = m_project ? m_project->vin : QStringLiteral("MA1ZC4TBKK1A11163");
-    QString vModel = (m_project && !m_project->model.isEmpty()) ? m_project->model : QStringLiteral("Mahindra PikUp BS4 (Bolero 2WD)");
+    QString vModel = (m_project && !m_project->model.isEmpty()) ? m_project->model : QStringLiteral("Mahindra PikUp BS4 4WD");
     QString vEcu = (m_project && !m_project->ecuType.isEmpty()) ? m_project->ecuType : QStringLiteral("Bosch EDC17C55");
 
     auto *vehLbl = new QLabel(tr("<b>Vehicle:</b> %1  |  <b>VIN:</b> %2  |  <b>ECU:</b> %3").arg(vModel, vVin, vEcu), card);
