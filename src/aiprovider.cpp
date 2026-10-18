@@ -1747,6 +1747,38 @@ QString OfflineECUExpertProvider::generateExpertResponse(const QString &query,
         return hs;
     }
 
+    // Immobilizer (IMMO OFF / Bypass)
+    if (q.contains("immo") || q.contains("immobilizer") || q.contains("key bypass") || q.contains("chabi")) {
+        QString im;
+        im += "## 🔑 Bosch EDC17 Immobilizer (IMMO OFF) Engineering Protocol\n\n";
+        im += "Immobilizer deactivation allows the engine to start without transponder key validation or communication with the vehicle's immobilizer antenna/box (e.g. for engine swaps, key loss, or faulty BCM/Smartra modules).\n\n";
+        im += "### Architecture on Bosch EDC17 (including EDC17C55 / Mahindra BS4):\n";
+        im += "1. **EEPROM (D-Flash / Data Flash)**:\n";
+        im += "   - In Bosch EDC17C55 (Infineon TriCore TC1767), immobilizer security tokens, PIN code, and transponder authorization state are stored in the EEPROM emulation sector (typically 64 KB or 128 KB).\n";
+        im += "   - **EEPROM Patch Method (Primary & Most Reliable)**:\n";
+        im += "     - Read the EEPROM binary via Bench (PCMFlash module 71, KT200, Foxflash, or KTAG).\n";
+        im += "     - Modify the immobilizer status flags / authorization bytes to permanent disabled state (`0x00` or `0xFF` depending on software version) and recalculate the EEPROM checksum.\n";
+        im += "2. **Internal Flash (P-Flash, 2048 KB / 2 MB)**:\n";
+        im += "   - Contains the conditional challenge-response validation logic that checks authentication over CAN bus.\n";
+        im += "   - In some EDC17 firmware variants, Flash patch is applied to force conditional jump instructions to always bypass the authentication lockout.\n";
+        im += "3. **Dual Patch (Flash + EEPROM)**:\n";
+        im += "   - On certain anti-tamper versions, matching both Flash and EEPROM prevents the ECU from restoring lock status on key-cycle.\n\n";
+        im += "### ⚠️ Crucial Hardware Steps for Mahindra Pik-Up / Bolero:\n";
+        im += "1. **Disconnect the Immo Box / Ring**:\n";
+        im += "   - After flashing IMMO OFF, unplug the physical Immobilizer module/box (located around the steering column/fuse box) or cut the Immo CAN line to prevent the box from broadcasting lock-request frames.\n";
+        im += "2. **Starter Relay Bypass (If Starter Does Not Crank)**:\n";
+        im += "   - On some Mahindra models, the starter motor relay is wired through the Immo Box / Body Control Module. If the starter does not turn when cranking with the key, bridge the starter relay or run Terminal 50 ignition trigger directly to the starter solenoid.";
+
+        if (isMizo) {
+            im += "\n\n### 📝 Mizo Tlangkawmna:\n"
+                  "- **Aw, EDC17C55 (Mahindra Pik-Up/Bolero)-ah IMMO OFF a theih chiang e!**\n"
+                  "- A tlangpuiin **EEPROM (D-Flash)** data chhiar a, immobilizer authorization bytes kha modify (patch) a, checksum siam tha a flash leh a ni tlangpui.\n"
+                  "- IMMO OFF i flash zawhah **Immo box/ring kha unplug (phawi)** tur a ni a, chutilochuan Immo box-in ECU kha a lock leh thei.\n"
+                  "- Chabi herh a starter a vir loh chuan starter relay kha direct/bypass a ngai thin bawk e.\n";
+        }
+        return im;
+    }
+
     // Speed Limiter (VMAX)
     if (q.contains("vmax") || q.contains("speed limit") || q.contains("top speed") || q.contains("speed limiter")) {
         QString vm;
