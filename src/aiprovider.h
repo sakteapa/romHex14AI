@@ -161,3 +161,28 @@ private:
     bool m_errorFired = false;
     QString m_reasoningContent;
 };
+
+// ── Built-in Offline ECU Expert (Zero API key / 100% offline intelligence) ───
+class OfflineECUExpertProvider : public AIProvider {
+    Q_OBJECT
+public:
+    explicit OfflineECUExpertProvider(QObject *parent = nullptr);
+    QString providerName() const override { return "Offline ECU Expert"; }
+    void setApiKey(const QString &) override {}
+    void setModel(const QString &) override {}
+    void setBaseUrl(const QString &) override {}
+
+    void send(const QString &systemPrompt,
+              const QVector<AIMessage> &messages,
+              const QVector<AIToolDef> &tools,
+              ChunkFn onChunk, ReasoningFn onReasoning, ToolCallFn onToolCall,
+              DoneFn onDone, ErrorFn onError) override;
+    void abort() override;
+
+private:
+    bool m_aborted = false;
+    QString generateExpertResponse(const QString &query, const QString &systemPrompt,
+                                   const QVector<AIToolDef> &tools,
+                                   QString &outToolName, QJsonObject &outToolArgs);
+};
+

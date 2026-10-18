@@ -1113,6 +1113,7 @@ AIAssistant::AIAssistant(QWidget *parent) : QWidget(parent)
     // Last field is the compatibility tier: 0 green (native, best), 1 amber
     // (OpenAI reference, good), 2 red (third-party / local, limited).
     m_providerConfigs = {
+        {"offline",   "Offline ECU Expert (No Key)", "internal",                                   "ecu-expert",              {"ecu-expert"}, "", false, 0},
         {"claude",    "Claude (Anthropic)",    "",                                                         "claude-sonnet-4-6",       {"claude-sonnet-5", "claude-opus-5", "claude-fable-5", "claude-haiku-4.5", "claude-sonnet-4-6"}, "https://docs.anthropic.com/en/docs/models-overview", true,  0},
         {"openai",    "OpenAI",                "https://api.openai.com/v1",                                "gpt-4o",                  {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-4o", "gpt-4o-mini", "o3-mini", "o1"}, "https://platform.openai.com/docs/models", false, 1},
         {"qwen",      "Qwen (Alibaba)",        "https://dashscope.aliyuncs.com/compatible-mode/v1",        "qwen-plus",               {"qwen2.5-coder-32b-instruct", "qwen-max", "qwen-plus", "qwen-turbo"}, "https://help.aliyun.com/zh/dashscope", false, 2},
@@ -2340,7 +2341,9 @@ AIProvider *AIAssistant::createProvider(int index)
     if (model.isEmpty()) model = cfg.defaultModel;
 
     AIProvider *prov;
-    if (cfg.isClaude) {
+    if (cfg.name == "offline" || cfg.baseUrl == "internal") {
+        prov = new OfflineECUExpertProvider(this);
+    } else if (cfg.isClaude) {
         auto *c = new ClaudeProvider(this);
         c->setApiKey(apiKey);
         c->setModel(model);
@@ -2363,6 +2366,7 @@ AIProvider *AIAssistant::createOneShotProvider(QObject *parent)
     // Static provider configs matching the instance ones
     struct PC { QString name; QString baseUrl; QString model; bool isClaude; };
     static const PC configs[] = {
+        {"offline",  "internal",                            "ecu-expert",              false},
         {"claude",   "",                                    "claude-sonnet-4-6",       true},
         {"openai",   "https://api.openai.com/v1",           "gpt-4o",                  false},
         {"qwen",     "https://dashscope.aliyuncs.com/compatible-mode/v1", "qwen-plus", false},
@@ -2390,7 +2394,9 @@ AIProvider *AIAssistant::createOneShotProvider(QObject *parent)
 
     if (model.isEmpty()) model = cfg.model;
 
-    if (cfg.isClaude) {
+    if (cfg.name == "offline" || cfg.baseUrl == "internal") {
+        return new OfflineECUExpertProvider(parent);
+    } else if (cfg.isClaude) {
         auto *c = new ClaudeProvider(parent);
         c->setApiKey(apiKey);
         c->setModel(model);
@@ -2453,8 +2459,7 @@ void AIAssistant::onSend()
     m_history.append({AIMessage::User, text, {}, {}, {}, {}, {}});
 
     if (!m_project) {
-        appendMessage("assistant", tr("No project loaded. Open a ROM file first."));
-        return;
+        appendMessage("assistant", tr("💡 *Note: No ROM project currently open. Answering from built-in ECU calibration expert intelligence:*"));
     }
 
     // Classify intent and select tools for AI
@@ -2465,10 +2470,6 @@ void AIAssistant::onSend()
     // Create provider if needed
     if (!m_provider) {
         m_provider = createProvider(m_currentProvider);
-        if (!m_provider) {
-            abortWithError(tr("No API key configured. Click ⚙ to set up."));
-            return;
-        }
     }
 
     const ProviderConfig &cfg = m_providerConfigs[m_currentProvider];
@@ -2476,12 +2477,16 @@ void AIAssistant::onSend()
     s.beginGroup(kSettingsGroup);
     QString apiKey = QString::fromUtf8(deobfuscate(s.value(cfg.name + "/apiKey").toByteArray()));
     s.endGroup();
-    bool needsKey = !cfg.isClaude
-                    ? (cfg.baseUrl.startsWith("https://api.") || cfg.baseUrl.startsWith("https://dash"))
-                    : true;
+    bool needsKey = (cfg.name != "offline" && cfg.baseUrl != "internal") && (
+        !cfg.isClaude ? (cfg.baseUrl.startsWith("https://api.") || cfg.baseUrl.startsWith("https://dash")) : true);
     if (needsKey && apiKey.isEmpty()) {
-        m_statusLabel->setText(tr("No API key set. Click ⚙ to configure."));
-        return;
+        // Fall back seamlessly to Built-in Offline ECU Expert!
+        if (!dynamic_cast<OfflineECUExpertProvider*>(m_provider)) {
+            delete m_provider;
+            m_provider = new OfflineECUExpertProvider(this);
+        }
+    } else if (!m_provider) {
+        m_provider = new OfflineECUExpertProvider(this);
     }
 
     buildSystemPrompt();
@@ -3542,9 +3547,10 @@ void AIAssistant::refreshSetupBanner()
     s.beginGroup(kSettingsGroup);
     QByteArray apiKey = deobfuscate(s.value(cfg.name + "/apiKey").toByteArray());
     s.endGroup();
-    const bool needsKey = cfg.isClaude
+    const bool needsKey = (cfg.name != "offline" && cfg.baseUrl != "internal") && (
+        cfg.isClaude
         || cfg.baseUrl.startsWith("https://api.")
-        || cfg.baseUrl.startsWith("https://dash");
+        || cfg.baseUrl.startsWith("https://dash"));
     m_setupBanner->setVisible(needsKey && apiKey.isEmpty());
 }
 
@@ -3710,7 +3716,10 @@ void AIAssistant::onSettingsClicked()
         keyEdit->setText(QString::fromUtf8(deobfuscate(ss.value(nc.name + "/apiKey").toByteArray())));
         modelEdit->setText(ss.value(nc.name + "/model", nc.defaultModel).toString());
         urlEdit->setText(ss.value(nc.name + "/baseUrl", nc.baseUrl).toString());
-        urlEdit->setEnabled(!nc.isClaude);
+        bool isOffline = (nc.name == "offline" || nc.baseUrl == "internal");
+        keyEdit->setEnabled(!isOffline);
+        keyEdit->setPlaceholderText(isOffline ? tr("No API key required (100% Offline)") : "sk-…");
+        urlEdit->setEnabled(!nc.isClaude && !isOffline);
         ss.endGroup();
     });
 

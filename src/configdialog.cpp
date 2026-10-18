@@ -1076,6 +1076,7 @@ void ConfigDialog::buildAIPage()
     // Provider registry — same order and defaults as AIAssistant
     m_aiProviders = {
         //  name        label                         baseUrl                                                     defaultModel                presetModels                                                                                              docsUrl                                                     isClaude  tier
+        {"offline",  tr("Offline ECU Expert (No Key)"), "internal",                                           "ecu-expert",              {"ecu-expert"}, "", false, 0},
         {"claude",   tr("Claude (Anthropic)"),   "",                                                          "claude-sonnet-4-6",       {"claude-sonnet-5", "claude-opus-5", "claude-fable-5", "claude-haiku-4.5", "claude-sonnet-4-6"}, "https://docs.anthropic.com/en/docs/models-overview", true,  0},
         {"openai",   tr("OpenAI"),               "https://api.openai.com/v1",                                 "gpt-4o",                  {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-4o", "gpt-4o-mini", "o3-mini", "o1"}, "https://platform.openai.com/docs/models", false, 1},
         {"qwen",     tr("Qwen (Alibaba)"),       "https://dashscope.aliyuncs.com/compatible-mode/v1",         "qwen-plus",               {"qwen2.5-coder-32b-instruct", "qwen-max", "qwen-plus", "qwen-turbo"}, "https://help.aliyun.com/zh/dashscope", false, 2},
@@ -1252,15 +1253,19 @@ void ConfigDialog::loadAIProviderFields(int index)
 
     m_aiUrlEdit->setText(baseUrl.isEmpty() ? p.baseUrl : baseUrl);
     m_aiUrlEdit->setPlaceholderText(p.isClaude ? "https://api.anthropic.com" : p.baseUrl);
-    m_aiUrlEdit->setEnabled(!p.isClaude);
+    bool isOffline = (p.name == "offline" || p.baseUrl == "internal");
+    m_aiKeyEdit->setEnabled(!isOffline);
+    m_aiKeyEdit->setPlaceholderText(isOffline ? tr("No API key required (100% Offline)") : "sk-…");
+    m_aiUrlEdit->setEnabled(!p.isClaude && !isOffline);
 
     // Update live support badge
     if (m_supportLabel) {
         static const char* const kHex[] = { "#3fb950", "#d29922", "#f85149" };
         const QString tierText =
-            (p.tier == 0) ? tr("Best — native API, full tool-calling and streaming")
-          : (p.tier == 1) ? tr("Good — OpenAI-compatible, tool-calling available")
-                          : tr("Limited — compatibility varies, some features may not work");
+            isOffline       ? tr("Best — Built-in Offline ECU Expert (Zero API key, offline intelligence)")
+          : (p.tier == 0)   ? tr("Best — native API, full tool-calling and streaming")
+          : (p.tier == 1)   ? tr("Good — OpenAI-compatible, tool-calling available")
+                            : tr("Limited — compatibility varies, some features may not work");
         m_supportLabel->setText(
             QString("<span style='color:%1;'>&#9679;</span>&nbsp;%2")
                 .arg(QLatin1String(kHex[p.tier])).arg(tierText));
