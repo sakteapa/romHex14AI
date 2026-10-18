@@ -157,6 +157,8 @@ set(SOURCES
     src/aitoolexecutor.cpp
     src/aiassistant.cpp
     src/projectregistry.cpp
+    src/vehiclevault.cpp
+    src/vehiclevault.h
     src/projectmanagerdlg.cpp
     src/introwizard.cpp
     src/createmapdlg.cpp

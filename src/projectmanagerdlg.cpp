@@ -7,7 +7,9 @@
 #include "projectmanagerdlg.h"
 #include "appconstants.h"
 #include "projectregistry.h"
+#include "vehiclevault.h"
 #include "project.h"
+#include <QFileDialog>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -224,6 +226,7 @@ ProjectManagerDialog::ProjectManagerDialog(QWidget *parent)
 
     buildTable();
 
+    m_tabs->addTab(buildVaultTab(), tr("Vehicle Vault"));
     m_tabs->addTab(localTab, tr("Local Projects"));
     m_tabs->addTab(buildCatalogTab(), tr("WOLS Catalog"));
 
@@ -739,3 +742,257 @@ void ProjectManagerDialog::onCatalogRefresh()
 }
 
 QWidget *ProjectManagerDialog::buildLocalTab() { return nullptr; /* unused — built inline in ctor */ }
+
+QWidget *ProjectManagerDialog::buildVaultTab()
+{
+    auto *w = new QWidget(m_tabs);
+    auto *root = new QVBoxLayout(w);
+    root->setContentsMargins(12, 12, 12, 12);
+    root->setSpacing(8);
+
+    // Top row
+    auto *topRow = new QHBoxLayout();
+    auto *filterLbl = new QLabel(tr("Search Vault:"));
+    m_vaultFilterEdit = new QLineEdit();
+    m_vaultFilterEdit->setPlaceholderText(tr("Search by VIN, Model, Brand, SW number…"));
+    m_vaultFilterEdit->setFixedWidth(340);
+    m_vaultCountLbl = new QLabel();
+
+    m_vaultRefreshBtn = new QPushButton(tr("Refresh Vault"));
+    m_vaultRefreshBtn->setToolTip(tr("Scan vault folder on disk for vehicles"));
+
+    m_vaultImportBtn = new QPushButton(tr("Import Vehicle Dump…"));
+    m_vaultImportBtn->setToolTip(tr("Import and organize Flash + EEPROM pair into the Vault"));
+    m_vaultImportBtn->setStyleSheet("QPushButton { background-color: #238636; color: white; font-weight: bold; border-radius: 4px; padding: 4px 12px; } QPushButton:hover { background-color: #2ea043; }");
+
+    topRow->addWidget(filterLbl);
+    topRow->addWidget(m_vaultFilterEdit);
+    topRow->addSpacing(16);
+    topRow->addWidget(m_vaultCountLbl);
+    topRow->addStretch();
+    topRow->addWidget(m_vaultImportBtn);
+    topRow->addWidget(m_vaultRefreshBtn);
+    root->addLayout(topRow);
+
+    // Table
+    m_vaultTable = new QTableWidget(0, 7);
+    m_vaultTable->setHorizontalHeaderLabels({
+        tr("Vehicle / Model"), tr("VIN"), tr("ECU Type"), tr("SW Version"),
+        tr("Dumps (Flash + EEPROM)"), tr("Status"), tr("Vault Path")
+    });
+    m_vaultTable->horizontalHeader()->setStretchLastSection(true);
+    m_vaultTable->verticalHeader()->setVisible(false);
+    m_vaultTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_vaultTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_vaultTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    m_vaultTable->setAlternatingRowColors(true);
+    m_vaultTable->setStyleSheet(
+        m_vaultTable->styleSheet() +
+        "QTableWidget { alternate-background-color:#111820; }");
+    m_vaultTable->setContextMenuPolicy(Qt::CustomContextMenu);
+    root->addWidget(m_vaultTable, 1);
+
+    // Bottom buttons
+    auto *btnRow = new QHBoxLayout();
+    m_vaultOpenBtn = new QPushButton(tr("Open in Editor"));
+    m_vaultOpenBtn->setEnabled(false);
+    m_vaultOpenBtn->setStyleSheet("QPushButton { font-weight: bold; }");
+
+    m_vaultExplorerBtn = new QPushButton(tr("Show in Explorer"));
+    m_vaultExplorerBtn->setEnabled(false);
+
+    auto *backupBtn = new QPushButton(tr("Create Backup Snapshot"));
+    backupBtn->setEnabled(false);
+
+    auto *closeBtn = new QPushButton(tr("Close"));
+
+    btnRow->addWidget(m_vaultOpenBtn);
+    btnRow->addWidget(m_vaultExplorerBtn);
+    btnRow->addWidget(backupBtn);
+    btnRow->addStretch();
+    btnRow->addWidget(closeBtn);
+    root->addLayout(btnRow);
+
+    // Connections
+    connect(m_vaultFilterEdit, &QLineEdit::textChanged, this, &ProjectManagerDialog::onVaultFilterChanged);
+    connect(m_vaultRefreshBtn,  &QPushButton::clicked,   this, &ProjectManagerDialog::onVaultRefresh);
+    connect(m_vaultImportBtn,   &QPushButton::clicked,   this, &ProjectManagerDialog::onVaultImportPair);
+    connect(m_vaultOpenBtn,     &QPushButton::clicked,   this, &ProjectManagerDialog::onVaultOpen);
+    connect(m_vaultExplorerBtn, &QPushButton::clicked,   this, &ProjectManagerDialog::onVaultShowInExplorer);
+    connect(backupBtn,          &QPushButton::clicked,   this, [this](){
+        int row = m_vaultTable->currentRow();
+        if (row < 0) return;
+        QString vin = m_vaultTable->item(row, 1)->text();
+        VehicleVault::instance().createBackup(vin, "ManualSnapshot");
+        QMessageBox::information(this, tr("Backup Created"), tr("Vehicle snapshot saved to Backups folder for VIN: %1").arg(vin));
+    });
+    connect(closeBtn, &QPushButton::clicked, this, &QDialog::reject);
+
+    connect(m_vaultTable, &QTableWidget::cellDoubleClicked, this, &ProjectManagerDialog::onVaultDoubleClick);
+    connect(m_vaultTable, &QTableWidget::itemSelectionChanged, this, [this, backupBtn](){
+        bool sel = m_vaultTable->currentRow() >= 0;
+        m_vaultOpenBtn->setEnabled(sel);
+        m_vaultExplorerBtn->setEnabled(sel);
+        backupBtn->setEnabled(sel);
+    });
+
+    connect(m_vaultTable, &QTableWidget::customContextMenuRequested, this, [this](const QPoint &pos){
+        int row = m_vaultTable->rowAt(pos.y());
+        if (row < 0) return;
+        m_vaultTable->selectRow(row);
+        QMenu ctx(this);
+        ctx.setStyleSheet(
+            "QMenu { background:#21262d; color:#e6edf3; border:1px solid #30363d; }"
+            "QMenu::item:selected { background:#1f6feb; }");
+        ctx.addAction(tr("Open Flash in Editor"), this, &ProjectManagerDialog::onVaultOpen);
+        ctx.addAction(tr("Show in Explorer"),     this, &ProjectManagerDialog::onVaultShowInExplorer);
+        ctx.addSeparator();
+        ctx.addAction(tr("Refresh Vault"),        this, &ProjectManagerDialog::onVaultRefresh);
+        ctx.exec(m_vaultTable->viewport()->mapToGlobal(pos));
+    });
+
+    buildVaultTable();
+    return w;
+}
+
+void ProjectManagerDialog::buildVaultTable(const QString &filter)
+{
+    if (!m_vaultTable) return;
+    m_vaultTable->setRowCount(0);
+
+    const auto records = VehicleVault::instance().listVehicles();
+    int count = 0;
+    for (const auto &r : records) {
+        if (!filter.isEmpty()) {
+            bool match = r.brand.contains(filter, Qt::CaseInsensitive)
+                      || r.model.contains(filter, Qt::CaseInsensitive)
+                      || r.vin.contains(filter, Qt::CaseInsensitive)
+                      || r.swNumber.contains(filter, Qt::CaseInsensitive)
+                      || r.ecuType.contains(filter, Qt::CaseInsensitive);
+            if (!match) continue;
+        }
+
+        int row = m_vaultTable->rowCount();
+        m_vaultTable->insertRow(row);
+        m_vaultTable->setRowHeight(row, 28);
+
+        QString vehicleTitle = r.brand + " " + r.model;
+        auto *vItem = new QTableWidgetItem(vehicleTitle);
+        vItem->setForeground(QColor("#58a6ff"));
+        QFont f = vItem->font();
+        f.setBold(true);
+        vItem->setFont(f);
+        m_vaultTable->setItem(row, 0, vItem);
+
+        m_vaultTable->setItem(row, 1, new QTableWidgetItem(r.vin));
+        m_vaultTable->setItem(row, 2, new QTableWidgetItem(r.ecuType));
+        m_vaultTable->setItem(row, 3, new QTableWidgetItem(r.swNumber.isEmpty() ? tr("Stock") : r.swNumber));
+
+        QString dumpStr = QString("Flash: %1 | EEPROM: %2")
+            .arg(r.hasFlash() ? "OK (2MB)" : "Missing",
+                 r.hasEeprom() ? "OK (64KB)" : "Missing");
+        auto *dumpItem = new QTableWidgetItem(dumpStr);
+        dumpItem->setForeground(QColor("#3fb950"));
+        m_vaultTable->setItem(row, 4, dumpItem);
+
+        QString statusStr = r.tuningStage + " [" + (r.dtcStatus.isEmpty() ? "Verified" : r.dtcStatus) + "]";
+        m_vaultTable->setItem(row, 5, new QTableWidgetItem(statusStr));
+
+        m_vaultTable->setItem(row, 6, new QTableWidgetItem(r.folderPath));
+        count++;
+    }
+
+    if (m_vaultCountLbl) {
+        m_vaultCountLbl->setText(tr("%1 vehicle(s) in Vault").arg(count));
+    }
+}
+
+void ProjectManagerDialog::onVaultFilterChanged(const QString &text)
+{
+    buildVaultTable(text.trimmed());
+}
+
+QString ProjectManagerDialog::vaultFlashPathAt(int row) const
+{
+    if (!m_vaultTable || row < 0 || row >= m_vaultTable->rowCount()) return {};
+    QString vin = m_vaultTable->item(row, 1)->text();
+    auto rec = VehicleVault::instance().getVehicle(vin);
+    return rec.flashFullPath();
+}
+
+QString ProjectManagerDialog::vaultFolderPathAt(int row) const
+{
+    if (!m_vaultTable || row < 0 || row >= m_vaultTable->rowCount()) return {};
+    auto *item = m_vaultTable->item(row, 6);
+    return item ? item->text() : QString();
+}
+
+void ProjectManagerDialog::onVaultOpen()
+{
+    int row = m_vaultTable ? m_vaultTable->currentRow() : -1;
+    if (row < 0) return;
+    QString flashPath = vaultFlashPathAt(row);
+    if (!flashPath.isEmpty() && QFile::exists(flashPath)) {
+        emit openRomRequested(flashPath);
+        accept();
+    } else {
+        QMessageBox::warning(this, tr("File Not Found"),
+            tr("Flash binary could not be found at:\n%1").arg(flashPath));
+    }
+}
+
+void ProjectManagerDialog::onVaultShowInExplorer()
+{
+    int row = m_vaultTable ? m_vaultTable->currentRow() : -1;
+    if (row < 0) return;
+    QString folder = vaultFolderPathAt(row);
+    if (!folder.isEmpty() && QDir(folder).exists()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+    }
+}
+
+void ProjectManagerDialog::onVaultRefresh()
+{
+    VehicleVault::instance().rescanVault();
+    buildVaultTable(m_vaultFilterEdit ? m_vaultFilterEdit->text().trimmed() : QString());
+}
+
+void ProjectManagerDialog::onVaultDoubleClick(int row, int /*col*/)
+{
+    if (row < 0) return;
+    onVaultOpen();
+}
+
+void ProjectManagerDialog::onVaultImportPair()
+{
+    QString flash = QFileDialog::getOpenFileName(this, tr("Select Flash Binary (.bin / .hex)"), {},
+        tr("Flash Binary (*.bin *.hex *.ori);;All files (*)"));
+    if (flash.isEmpty()) return;
+
+    QString eeprom = QFileDialog::getOpenFileName(this, tr("Select EEPROM Binary (optional)"),
+        QFileInfo(flash).absolutePath(),
+        tr("EEPROM Binary (*.bin *.eep);;All files (*)"));
+
+    bool ok = false;
+    QString brand = QInputDialog::getText(this, tr("Vehicle Brand"),
+        tr("Enter Vehicle Brand (e.g. Mahindra, Tata, Bosch):"), QLineEdit::Normal, "Mahindra", &ok);
+    if (!ok || brand.isEmpty()) return;
+
+    QString model = QInputDialog::getText(this, tr("Vehicle Model"),
+        tr("Enter Vehicle Model (e.g. PikUp BS4, 612SK):"), QLineEdit::Normal, "PikUp_BS4", &ok);
+    if (!ok || model.isEmpty()) return;
+
+    QString vin = QInputDialog::getText(this, tr("Vehicle VIN"),
+        tr("Enter Vehicle VIN / Plate Number:"), QLineEdit::Normal, "VIN_NEW", &ok);
+    if (!ok || vin.isEmpty()) return;
+
+    QString err;
+    if (VehicleVault::instance().importDumpPair(flash, eeprom, brand, model, vin, "Bosch/Delphi", &err)) {
+        QMessageBox::information(this, tr("Import Complete"),
+            tr("Vehicle %1 %2 (VIN: %3) imported and filed into Vehicle Vault successfully!").arg(brand, model, vin));
+        buildVaultTable();
+    } else {
+        QMessageBox::critical(this, tr("Import Failed"), err);
+    }
+}
+

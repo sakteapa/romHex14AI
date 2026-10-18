@@ -6860,6 +6860,21 @@ void MainWindow::actProjectManager()
         broadcastAvailableProjects();
         refreshProjectTree();
     });
+    connect(&dlg, &ProjectManagerDialog::openRomRequested,
+            this, [this](const QString &path){
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly)) {
+            QMessageBox::critical(this, tr("Error"), tr("Cannot open ROM file:\n") + path);
+            return;
+        }
+        auto *project = new Project(this);
+        project->createdAt = QDateTime::currentDateTime();
+        project->currentData = f.readAll();
+        project->originalData = project->currentData;
+        project->projectPath = path;
+        f.close();
+        openProject(project);
+    });
     dlg.exec();
 }
 

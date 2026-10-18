@@ -45,6 +45,9 @@ signals:
     /// the same auto-config logic it uses for its own Find menu entry.
     void buildSimilarityIndexRequested();
 
+    /// Vehicle Vault: open a raw Flash/ROM file directly in the editor
+    void openRomRequested(const QString &path);
+
 private slots:
     void onOpen();
     void onRename();
@@ -56,6 +59,15 @@ private slots:
     void onFilterChanged(const QString &text);
     void refresh();
 
+    // ── Vehicle Vault tab ──
+    void onVaultFilterChanged(const QString &text);
+    void onVaultOpen();
+    void onVaultShowInExplorer();
+    void onVaultImportPair();
+    void onVaultRefresh();
+    void onVaultSelectionChanged();
+    void onVaultDoubleClick(int row, int col);
+
     // ── WinOLS tab ──
     void onCatalogChanged(int idx);
     void onCatalogFilterChanged(const QString &text);
@@ -64,6 +76,7 @@ private slots:
     void onCatalogRefresh();
 
 private:
+    QWidget *buildVaultTab();
     QWidget *buildLocalTab();
     QWidget *buildCatalogTab();
     void     loadCatalogList();
@@ -71,7 +84,19 @@ private:
     void     applyCatalogFilter(const QString &needle);
 
     void     buildTable(const QString &filter = {});
+    void     buildVaultTable(const QString &filter = {});
     QString  pathAt(int row) const;
+    QString  vaultFlashPathAt(int row) const;
+    QString  vaultFolderPathAt(int row) const;
+
+    // Vehicle Vault tab
+    QTableWidget *m_vaultTable       = nullptr;
+    QLineEdit    *m_vaultFilterEdit  = nullptr;
+    QLabel       *m_vaultCountLbl    = nullptr;
+    QPushButton  *m_vaultOpenBtn     = nullptr;
+    QPushButton  *m_vaultExplorerBtn = nullptr;
+    QPushButton  *m_vaultImportBtn   = nullptr;
+    QPushButton  *m_vaultRefreshBtn  = nullptr;
 
     // Local projects tab
     QTableWidget *m_table       = nullptr;
