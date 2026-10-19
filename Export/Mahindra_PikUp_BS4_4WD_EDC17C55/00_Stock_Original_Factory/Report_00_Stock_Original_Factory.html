@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Stock Factory Baseline â€” romHEX14 Calibration Report</title>
+<style>
+  @page { size: A4 portrait; margin: 12mm 15mm 12mm 15mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; color: #1e293b; margin: 0; padding: 0; font-size: 9.5pt; line-height: 1.45; }
+  .header { background: #0f172a; color: white; padding: 16px 20px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { margin: 0 0 4px 0; font-size: 15pt; font-weight: 800; }
+  .header .sub { font-size: 8.5pt; color: #94a3b8; }
+  .tag { background: #2563eb; color: white; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 8pt; text-transform: uppercase; }
+  .section { margin-bottom: 12px; page-break-inside: avoid; }
+  .section-title { font-size: 10pt; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 3px; margin: 0 0 6px 0; display:flex; justify-content:space-between; }
+  .section-title span.mz { font-size: 8pt; color: #64748b; font-weight: 500; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
+  .card-label { font-size: 7pt; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 2px; }
+  .card-val { font-size: 9pt; font-weight: 700; color: #0f172a; font-family: 'Consolas', monospace; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-top: 4px; }
+  th { background: #f1f5f9; color: #334155; font-weight: 700; text-align: left; padding: 6px 8px; border: 1px solid #cbd5e1; }
+  td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .badge-off { background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 7.5pt; }
+  .badge-ok  { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 3px; font-weight: 700; font-size: 7.5pt; }
+  .alert { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 8px 12px; border-radius: 6px; font-size: 8pt; margin-top: 6px; }
+  .footer { border-top: 1px solid #e2e8f0; padding-top: 6px; font-size: 7.5pt; color: #94a3b8; display: flex; justify-content: space-between; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>ROMHEX14 CALIBRATION PACKAGE CERTIFICATE</h1>
+    <div class="sub">Stock Factory Baseline | Factory Stock Firmware Hlutna</div>
+  </div>
+  <div><span class="tag">00_Stock_Original_Factory</span></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span>1. VEHICLE PROFILE</span><span class="mz">Motor Chanchin</span></div>
+  <div class="grid-4">
+    <div class="card"><div class="card-label">Model</div><div class="card-val">Mahindra Pik-Up BS4 4WD</div></div>
+    <div class="card"><div class="card-label">VIN</div><div class="card-val">MA1ZC4TBKK1A11163</div></div>
+    <div class="card"><div class="card-label">ECU Type</div><div class="card-val">Bosch EDC17C55</div></div>
+    <div class="card"><div class="card-label">Bosch SW</div><div class="card-val">1037560611</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span>2. CALIBRATION TARGETS</span><span class="mz">Thahrui & Map Hlutna</span></div>
+  <table>
+    <thead><tr><th>Metric</th><th>Factory Value</th><th>Package Target</th><th>Net Gain</th></tr></thead>
+    <tbody>
+      <tr><td>Engine Power</td><td>70 HP @ 3,200 RPM</td><td><b>70 HP</b></td><td>Stock Baseline</td></tr>
+      <tr><td>Engine Torque</td><td>200 Nm @ 1,800</td><td><b>200 Nm</b></td><td>Stock Baseline</td></tr>
+      <tr><td>Fuel Limit (IQ)</td><td>43.54 mg/hub</td><td><b>43.54 mg/hub</b></td><td>Stock Baseline</td></tr>
+      <tr><td>Boost Target</td><td>2,200 mbar</td><td><b>2200 mbar</b></td><td>Stock Baseline</td></tr>
+      <tr><td>Rail Pressure</td><td>1,550 bar</td><td><b>1550 bar</b></td><td>Stock Baseline</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title"><span>3. DTC & SECURITY MATRIX</span><span class="mz">Fault Code & Security Thliarna</span></div>
+  <table>
+    <thead><tr><th>Code / Identifier</th><th>Subsystem</th><th>Address</th><th>Status</th></tr></thead>
+    <tbody><tr><td colspan='4' style='text-align:center; color:#64748b;'>Factory Standard OBD Matrix (No DTCs modified)</td></tr></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title"><span>4. BINARY FILES & INTEGRITY</span><span class="mz">File Hlutna & Checksum</span></div>
+  <table>
+    <thead><tr><th>Type</th><th>Filename</th><th>SHA-256 Hash</th></tr></thead>
+    <tbody>
+      <tr><td><b>Flash (2 MB)</b></td><td>Original_Flash_1037560611.bin</td><td><code style='font-size:7.5pt;'>4EDF9D683F0627EBF3E69584FF8D01BECC4B28CA5479B41028014BAF875631D1</code></td></tr>
+      <tr><td><b>EEPROM (64 KB)</b></td><td>Original_EEPROM.bin</td><td><code style='font-size:7.5pt;'>09CD990A3C39462FD31A0E37B671A0892FF3AB6F6D88528338611522FF9F9550</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title"><span>5. INSTRUCTIONS & ADVISORY</span><span class="mz">Hriattur Pawimawh Te</span></div>
+  <div class="alert">
+    <b>CHECKSUM PROTOCOL:</b> Bosch EDC17C55 requires Bench Flasher auto-checksum calculation on write (PCMFlash Mod 71 / Foxflash / KT200 / KTAG automatically correct CRC32 on load).<br>
+    <b>STANDARD FLASHING:</b> Flash via Bench mode. Ensure battery voltage is >= 12.5V during programming.
+  </div>
+</div>
+
+<div class="footer">
+  <div>romHEX14 Vault Index: Export/Mahindra_PikUp_BS4_4WD_EDC17C55/00_Stock_Original_Factory</div>
+  <div>Generated: 2026-10-19 13:34:34 | Certified Delivery</div>
+</div>
+</body>
+</html>

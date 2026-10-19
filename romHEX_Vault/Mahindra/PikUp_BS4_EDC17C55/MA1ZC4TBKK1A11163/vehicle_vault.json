@@ -1,0 +1,49 @@
+{
+    "vault_version":  "1.0",
+    "vehicle_info":  {
+                         "brand":  "Mahindra",
+                         "model":  "Pik-Up / Bolero BS4 4WD",
+                         "variant":  "PikUp BS4 4x4 (Factory EEPROM label: PBN4ASCABS4MSND2WD)",
+                         "engine":  "m2DiCR 2.5L Turbo Diesel",
+                         "vin":  "MA1ZC4TBKK1A11163",
+                         "drive_type":  "4WD (4x4)"
+                     },
+    "ecu_info":  {
+                     "type":  "Bosch EDC17C55",
+                     "mcu":  "Infineon TriCore SAK-TC1767",
+                     "hw_number":  "0281032338",
+                     "sw_number":  "1037560611",
+                     "flash_size":  2097152,
+                     "eeprom_size":  65536
+                 },
+    "diagnostics":  {
+                        "active_dtcs":  [
+
+                                        ],
+                        "dtc_status":  "CLEAN / SUPPRESSED (EGR P0401/P0405 \u0026 IMMO P0513/P0633 Disabled)",
+                        "dtc_switches":  "Factory OBD Matrix Verified"
+                    },
+    "files":  {
+                  "original_flash":  "Original_Flash_1037560611.bin",
+                  "original_eeprom":  "Original_EEPROM.bin",
+                  "flash_sha256":  "4EDF9D683F0627EBF3E69584FF8D01BECC4B28CA5479B41028014BAF875631D1",
+                  "eeprom_sha256":  "29F4666EEBD213F562CA5F1641627EF4D5979DE486A518A5274E59B00FA77183",
+                  "tuned_flash": "Tuned_Versions/Mahindra_PikUp_BS4_Stage1_EGR_IMMO_OFF.bin",
+                  "tuned_flash_sha256": "827B46E4E2A532B97766B6E8E4BBF393F1F635692F62EF79E409539BFBECD5EE",
+                  "immo_off_eeprom": "Tuned_Versions/Mahindra_PikUp_BS4_IMMO_OFF_EEPROM.bin",
+                  "immo_off_eeprom_sha256": "09CD990A3C39462FD31A0E37B671A0892FF3AB6F6D88528338611522FF9F9550"
+              },
+    "tuning_status":  {
+                          "current_stage":  "Stage 1 Tuned (+25 HP / +60 Nm) | EGR OFF | IMMO OFF",
+                          "immo_status":  "DEACTIVATED / IMMO OFF (Physical Immo Box must be unplugged)",
+                          "stock_power_hp":  70,
+                          "stock_torque_nm":  200,
+                          "stage1_power_hp":  95,
+                          "stage1_torque_nm":  260,
+                          "fuel_limit_mg":  53.0,
+                          "boost_peak_mbar":  2320,
+                          "rail_peak_bar":  1600
+                      },
+    "created_at":  "2026-10-18 21:23:20",
+    "last_modified":  "2026-10-19 13:11:48"
+}

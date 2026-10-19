@@ -1,0 +1,11 @@
+================================================================================
+ROMHEX14 TUNING PACKAGE MANIFEST - 01_Stage1_Power_Only
+Vehicle: Mahindra Pik-Up BS4 4WD | ECU: Bosch EDC17C55 | SW: 1037560611
+Configuration: Stage 1 Safe Power Remap (Stage 1 Thahrui Tihpunna (Stock Emissions & Immo))
+Generated: 2026-10-19 13:34:34
+================================================================================
+
+FLASH BINARY: Mahindra_PikUp_BS4_Stage1_Power_Only_Flash.bin
+SHA-256:      E33981DC1FC209CC31E60C62533CCE3AD180E2612F4432D38005E5107B7C9B50
+Size:         2097152 bytes (2,048 KB)
+Checksum:     Requires Bench Flasher Auto-Checksum (PCMFlash Mod 71 / KT200 / Foxflash)

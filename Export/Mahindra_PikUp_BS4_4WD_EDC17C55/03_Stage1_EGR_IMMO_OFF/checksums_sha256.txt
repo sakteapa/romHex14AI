@@ -1,0 +1,15 @@
+================================================================================
+ROMHEX14 TUNING PACKAGE MANIFEST - 03_Stage1_EGR_IMMO_OFF
+Vehicle: Mahindra Pik-Up BS4 4WD | ECU: Bosch EDC17C55 | SW: 1037560611
+Configuration: Stage 1 Remap + EGR OFF + IMMO Bypass (Stage 1 + EGR OFF + IMMO Bypass (Chabi Tellovin))
+Generated: 2026-10-19 13:34:34
+================================================================================
+
+FLASH BINARY: Mahindra_PikUp_BS4_Stage1_EGR_IMMO_OFF_Flash.bin
+SHA-256:      827B46E4E2A532B97766B6E8E4BBF393F1F635692F62EF79E409539BFBECD5EE
+Size:         2097152 bytes (2,048 KB)
+Checksum:     Requires Bench Flasher Auto-Checksum (PCMFlash Mod 71 / KT200 / Foxflash)
+
+EEPROM BINARY: Mahindra_PikUp_BS4_IMMO_OFF_EEPROM.bin
+SHA-256:       09CD990A3C39462FD31A0E37B671A0892FF3AB6F6D88528338611522FF9F9550
+Size:          65,536 bytes (64 KB)

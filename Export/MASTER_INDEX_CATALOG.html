@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>romHEX14 Master Vehicle Vault Index Catalog</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm 15mm 12mm 15mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { font-family: 'Segoe UI', -apple-system, sans-serif; color: #1e293b; margin: 0; padding: 0; font-size: 9pt; }
+  .header { background: #0f172a; color: white; padding: 16px 24px; border-radius: 8px; margin-bottom: 14px; display:flex; justify-content:space-between; align-items:center; }
+  .header h1 { margin: 0 0 4px 0; font-size: 16pt; font-weight: 800; }
+  .header .sub { font-size: 9pt; color: #94a3b8; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.5pt; }
+  th { background: #f1f5f9; color: #334155; font-weight: 700; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; }
+  td { padding: 8px 10px; border: 1px solid #e2e8f0; }
+  tr:nth-child(even) td { background: #f8fafc; }
+  .footer { border-top: 1px solid #e2e8f0; padding-top: 8px; font-size: 7.5pt; color: #94a3b8; margin-top: 14px; display:flex; justify-content:space-between; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>ROMHEX14 MASTER VEHICLE VAULT CATALOG</h1>
+    <div class="sub">Comprehensive Tuning & Firmware Database Index | 2026-10-19 13:37</div>
+  </div>
+  <div><span style='background:#2563eb; color:white; padding:6px 12px; border-radius:4px; font-weight:bold;'>5 Indexed Packages</span></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Package ID</th>
+      <th>Configuration & Title</th>
+      <th>Power Output</th>
+      <th>EGR Status</th>
+      <th>Immobilizer</th>
+      <th>Export Folder Path</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+  <td><b>00_Stock_Original_Factory</b></td>
+  <td>Stock Factory Baseline<br><small style='color:#64748b;'>Factory Stock Firmware Hlutna</small></td>
+  <td><b>70 HP</b> / 200 Nm</td>
+  <td>Active (Stock)</td>
+  <td>Locked & Synchronized (Stock Key: 78-BA-9D-A3)</td>
+  <td><code>Export/Mahindra_PikUp_BS4_4WD_EDC17C55/00_Stock_Original_Factory</code></td>
+</tr><tr>
+  <td><b>01_Stage1_Power_Only</b></td>
+  <td>Stage 1 Safe Power Remap<br><small style='color:#64748b;'>Stage 1 Thahrui Tihpunna (Stock Emissions & Immo)</small></td>
+  <td><b>95 HP</b> / 260 Nm</td>
+  <td>Active (Stock)</td>
+  <td>Locked & Synchronized (Stock Key: 78-BA-9D-A3)</td>
+  <td><code>Export/Mahindra_PikUp_BS4_4WD_EDC17C55/01_Stage1_Power_Only</code></td>
+</tr><tr>
+  <td><b>02_Stage1_EGR_OFF</b></td>
+  <td>Stage 1 Remap + EGR Deactivation<br><small style='color:#64748b;'>Stage 1 Remap + EGR Khar Hmak</small></td>
+  <td><b>95 HP</b> / 260 Nm</td>
+  <td>DEACTIVATED / EGR OFF (P0401/P0405 Suppressed)</td>
+  <td>Locked & Synchronized (Stock Key: 78-BA-9D-A3)</td>
+  <td><code>Export/Mahindra_PikUp_BS4_4WD_EDC17C55/02_Stage1_EGR_OFF</code></td>
+</tr><tr>
+  <td><b>03_Stage1_EGR_IMMO_OFF</b></td>
+  <td>Stage 1 Remap + EGR OFF + IMMO Bypass<br><small style='color:#64748b;'>Stage 1 + EGR OFF + IMMO Bypass (Chabi Tellovin)</small></td>
+  <td><b>95 HP</b> / 260 Nm</td>
+  <td>DEACTIVATED / EGR OFF (P0401/P0405 Suppressed)</td>
+  <td>BYPASSED / IMMO OFF (Physical Immo Box Must Be Unplugged)</td>
+  <td><code>Export/Mahindra_PikUp_BS4_4WD_EDC17C55/03_Stage1_EGR_IMMO_OFF</code></td>
+</tr><tr>
+  <td><b>04_Stock_IMMO_OFF_Only</b></td>
+  <td>Factory Stock Power + IMMO Bypass<br><small style='color:#64748b;'>Stock Power + Chabi (IMMO) Bypass Ringawt</small></td>
+  <td><b>70 HP</b> / 200 Nm</td>
+  <td>Active (Stock)</td>
+  <td>BYPASSED / IMMO OFF (Physical Immo Box Must Be Unplugged)</td>
+  <td><code>Export/Mahindra_PikUp_BS4_4WD_EDC17C55/04_Stock_IMMO_OFF_Only</code></td>
+</tr>
+  </tbody>
+</table>
+
+<div class="footer">
+  <div>romHEX14 Vehicle Vault Database: Export/vault_database.json</div>
+  <div>Query Tool: .\vault_manager.ps1 -List | Search | Get</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+================================================================================
+ROMHEX14 TUNING PACKAGE MANIFEST - 02_Stage1_EGR_OFF
+Vehicle: Mahindra Pik-Up BS4 4WD | ECU: Bosch EDC17C55 | SW: 1037560611
+Configuration: Stage 1 Remap + EGR Deactivation (Stage 1 Remap + EGR Khar Hmak)
+Generated: 2026-10-19 13:34:34
+================================================================================
+
+FLASH BINARY: Mahindra_PikUp_BS4_Stage1_EGR_OFF_Flash.bin
+SHA-256:      6A08EAA5D86F75F0AD661F2193F0C78C598543E1BBA6606D0C3995F43A2C0020
+Size:         2097152 bytes (2,048 KB)
+Checksum:     Requires Bench Flasher Auto-Checksum (PCMFlash Mod 71 / KT200 / Foxflash)

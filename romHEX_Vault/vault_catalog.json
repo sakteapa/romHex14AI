@@ -1,0 +1,10 @@
+{
+    "vin":  "MA1ZC4TBKK1A11163",
+    "brand":  "Mahindra",
+    "model":  "Pik-Up BS4 4WD",
+    "ecu":  "Bosch EDC17C55",
+    "sw":  "1037560611",
+    "vault_path":  "Mahindra/PikUp_BS4_EDC17C55/MA1ZC4TBKK1A11163",
+    "status":  "Stage 1 Tuned (+25HP) | EGR OFF | IMMO OFF",
+    "last_updated":  "2026-10-19 13:11:48"
+}
